@@ -23,14 +23,19 @@ function clone_repo(){
 }
 
 function update_repo(){
-  $desc = git describe --tags
-  if [ grep -q "-" $desc ]; then 
-    local new_tag = echo $desc | cut -d "-" | awk '{print $1.$2.$3+1}'
-    echo $new_tag
+  local desc=$(git describe --tags)
+  if echo "$desc" | grep -q "-"; then 
+    local new_tag=$(echo "$desc" | cut -d "-" -f1 | awk -F. '{print $1"."$2"."$3+1}')
+    git tag -a $new_tag -m "Updating version to $new_tag"
+    git push origin $new_tag
   else 
-   echo "No changes"
+    echo "No changes"
   fi
 }
 
-cd "$(clone_repo $1)"
-update_repo
+clonned_repo_dir=$(clone_repo $1)
+cd "$clonned_repo_dir"
+pwd
+update_repo 
+cd ..
+rm -rf "$clonned_repo_dir"
